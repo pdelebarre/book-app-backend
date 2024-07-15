@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: book-app
+  template:
+    metadata:
+      labels:
+        app: book-app
+    spec:
+      containers:
+      - name: book-app
+        image: book-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
