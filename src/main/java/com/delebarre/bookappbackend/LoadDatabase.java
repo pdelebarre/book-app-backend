@@ -1,11 +1,11 @@
-package com.delebarre.bookcollection;
+package com.delebarre.bookappbackend;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.delebarre.bookcollection.entities.Book;
-import com.delebarre.bookcollection.repositories.BookRepository;
+import com.delebarre.bookappbackend.entities.Book;
+import com.delebarre.bookappbackend.repositories.BookRepository;
 
 @Configuration
 public class LoadDatabase {

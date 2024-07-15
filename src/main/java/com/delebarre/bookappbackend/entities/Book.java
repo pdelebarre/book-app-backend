@@ -1,4 +1,4 @@
-package com.delebarre.bookcollection.entities;
+package com.delebarre.bookappbackend.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,5 +23,5 @@ public class Book implements Serializable {
 
     private String title;
     private String author;
-    
+
 }

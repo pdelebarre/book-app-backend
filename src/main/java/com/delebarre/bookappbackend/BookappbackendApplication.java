@@ -1,13 +1,13 @@
-package com.delebarre.bookcollection;
+package com.delebarre.bookappbackend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BookcollectionApplication {
+public class BookappbackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BookcollectionApplication.class, args);
+		SpringApplication.run(BookappbackendApplication.class, args);
 	}
 
 }

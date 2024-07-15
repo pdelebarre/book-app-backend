@@ -8,9 +8,10 @@ RUN mvn clean package -DskipTests
 # Stage 2: Package the application
 FROM openjdk:17-jdk-slim
 VOLUME /tmp
-COPY --from=build /app/target/bookcollection-0.0.1-SNAPSHOT.jar /book-app.jar
+COPY --from=build /app/target/bookappbackend-0.0.1-SNAPSHOT.jar /bookappbackend.jar
 WORKDIR /
-ENTRYPOINT ["java","-jar","/book-app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/bookappbackend.jar"]
 
 # Optional: Set environment variables
 ENV JAVA_OPTS=""
