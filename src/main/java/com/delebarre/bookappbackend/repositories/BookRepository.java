@@ -7,5 +7,6 @@ import com.delebarre.bookappbackend.entities.Book;
 
 @Repository
 public interface BookRepository extends MongoRepository<Book, Long> {
+    Book findByTitle(String title);
 
 }

@@ -23,5 +23,7 @@ public class Book implements Serializable {
 
     private String title;
     private String author;
+    private String coverUrl;
+    private String coverImage; // Base64 encoded image
 
 }

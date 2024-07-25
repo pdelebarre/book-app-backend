@@ -13,9 +13,9 @@ public class LoadDatabase {
     @Bean
     CommandLineRunner initDatabase(BookRepository repository) {
         return args -> {
-            repository.save(new Book(null, "The Great Gatsby", "F. Scott Fitzgerald"));
-            repository.save(new Book(null, "1984", "George Orwell"));
-            repository.save(new Book(null, "To Kill a Mockingbird", "Harper Lee"));
+            repository.save(new Book(null, "The Great Gatsby", "F. Scott Fitzgerald", null, null));
+            repository.save(new Book(null, "1984", "George Orwell", null, null));
+            repository.save(new Book(null, "To Kill a Mockingbird", "Harper Lee", null, null));
         };
     }
 }
