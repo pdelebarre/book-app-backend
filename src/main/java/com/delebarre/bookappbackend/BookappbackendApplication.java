@@ -2,12 +2,18 @@ package com.delebarre.bookappbackend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-public class BookappbackendApplication {
+public class BookAppBackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BookappbackendApplication.class, args);
+		SpringApplication.run(BookAppBackendApplication.class, args);
 	}
 
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
 }
