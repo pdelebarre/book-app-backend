@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +26,9 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate;
+
+
+    private static final String OPEN_LIBRARY_API = "https://openlibrary.org/search.json";
 
     @Override
     public List<Book> getAllBooks() {
@@ -118,5 +124,71 @@ public class BookServiceImpl implements BookService {
     @Override
     public void deleteBook(String id) {
         bookRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Book> searchBooks(String title, String author) {
+
+        String searchUrl = OPEN_LIBRARY_API + "?title=" + title + "&author=" + author;
+        ResponseEntity<String> response = restTemplate.getForEntity(searchUrl, String.class);
+        String responseBody = response.getBody();
+
+        List<Book> books = new ArrayList<>();
+        if (responseBody != null) {
+                        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+            JsonNode docs = rootNode.path("docs");
+
+            for (JsonNode doc : docs) {
+                Book book = new Book();
+                    
+if (doc.has("title")) {
+    book.setTitle(doc.path("title").asText());
+}
+if (doc.has("author_name") && doc.path("author_name").isArray() && !doc.path("author_name").isEmpty()) {
+    book.setAuthor(doc.path("author_name").get(0).asText());
+}
+if (doc.has("subject")) {
+    book.setGenre(doc.path("subject").asText());
+}
+if (doc.has("isbn") && doc.path("isbn").isArray() && !doc.path("isbn").isEmpty()) {
+    book.setISBN(doc.path("isbn").get(0).asText());
+}
+if (doc.has("first_publish_year")) {
+    book.setPublicationDate(doc.path("first_publish_year").asText());
+}
+if (doc.has("subtitle")) {
+    book.setDescription(doc.path("subtitle").asText());
+}
+if (doc.has("publisher") && doc.path("publisher").isArray() && !doc.path("publisher").isEmpty()) {
+    book.setPublisher(doc.path("publisher").get(0).asText());
+}
+if (doc.has("language") && doc.path("language").isArray() && !doc.path("language").isEmpty()) {
+    book.setLanguage(doc.path("language").get(0).asText());
+}
+if (doc.has("number_of_pages_median")) {
+    book.setPageCount(doc.path("number_of_pages_median").asInt());
+}
+if (doc.has("format")) {
+    book.setFormat(doc.path("format").asText());
+}
+if (doc.has("subject")) {
+    book.setSubjects(objectMapper.convertValue(doc.path("subject"), List.class));
+}
+if (doc.has("key")) {
+    book.setOpenLibraryId(doc.path("key").asText());
+}
+if (doc.has("author_name") && doc.path("author_name").isArray()) {
+    book.setContributors(objectMapper.convertValue(doc.path("author_name"), List.class));
+}
+                books.add(book);
+            }
+            } catch (JsonProcessingException e) {
+            // Handle JSON parsing exception
+            e.printStackTrace();
+        }
+        }
+        return books;
     }
 }

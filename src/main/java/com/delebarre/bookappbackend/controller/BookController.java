@@ -40,13 +40,20 @@ public class BookController {
     @ApiOperation(value = "Add a new book")
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Book successfully created"),
-            @ApiResponse(code = 409, message = "Book already exists")
+            @ApiResponse(code = 409, message = "Book already exists"),
+            @ApiResponse(code = 400, message = "Error creating book")
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Book> createBook(@RequestBody BookCreateRequest bookCreateRequest) {
-        Book createdBook = bookService.createBook(bookCreateRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdBook);
+    public ResponseEntity<?> createBook(@RequestBody BookCreateRequest request) {
+        try {
+            Book book = bookService.createBook(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(book);
+        } catch (BookAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating book");
+        }
     }
 
     @ApiOperation(value = "Update an existing book")
@@ -65,6 +72,15 @@ public class BookController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBook(@PathVariable String id) {
         bookService.deleteBook(id);
+    }
+
+    @ApiOperation(value = "Search books by title and author", response = List.class)
+    @GetMapping("/search")
+    public ResponseEntity<List<Book>> searchBooks(
+            @RequestParam String title,
+            @RequestParam String author) {
+        List<Book> books = bookService.searchBooks(title, author);
+        return ResponseEntity.ok(books);
     }
 
     @ApiOperation(value = "Handle BookAlreadyExistsException")
