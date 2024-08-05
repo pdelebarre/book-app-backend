@@ -10,10 +10,12 @@ services:
       - $MONGODB_LOCAL_PORT:$MONGODB_DOCKER_PORT
     volumes:
       - db:/data/db
-  app:
+  bookappbackend:
     depends_on:
       - mongo_db
     build: ./bookappbackend
+    image: bookappbackend
+
     restart: on-failure
     env_file: ./.env
     ports:
