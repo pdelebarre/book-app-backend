@@ -1,24 +1,28 @@
 package com.delebarre.bookappbackend.service;
 
-import com.delebarre.bookappbackend.dto.BookCreateRequest;
+import com.delebarre.bookappbackend.dto.BookDTO;
 import com.delebarre.bookappbackend.model.Book;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.http.ResponseEntity;
 
 public interface BookService {
     List<Book> getAllBooks();
 
     Book getBookById(String id);
 
-    Book createBook(BookCreateRequest bookCreateRequest);
+    Book createBook(BookDTO bookCreateRequest);
+    
+    public Book createBook(String openLibraryId);
 
     Book updateBook(String id, Book book);
 
-    void deleteBook(String id);
+    ResponseEntity<?> deleteBook(String id);
 
     List<Book> searchBooks(String title, String author);
 
-    Optional<byte[]> searchCover(Long openLibraryId);
+    public Optional<byte[]> searchCover(String openLibraryId);
 
 }

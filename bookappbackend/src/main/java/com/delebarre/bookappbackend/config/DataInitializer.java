@@ -1,6 +1,6 @@
 package com.delebarre.bookappbackend.config;
 
-import com.delebarre.bookappbackend.dto.BookCreateRequest;
+import com.delebarre.bookappbackend.dto.BookDTO;
 import com.delebarre.bookappbackend.exception.BookAlreadyExistsException;
 import com.delebarre.bookappbackend.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +16,13 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         // List of books to add
-        BookCreateRequest[] books = {
-                new BookCreateRequest("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565"),
-                new BookCreateRequest("To Kill a Mockingbird", "Harper Lee", "9780446310789"),
-                new BookCreateRequest("1984", "George Orwell", "9780451524935")
+        BookDTO[] books = {
+                new BookDTO("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565"),
+                new BookDTO("To Kill a Mockingbird", "Harper Lee", "9780446310789"),
+                new BookDTO("1984", "George Orwell", "9780451524935")
         };
 
-        for (BookCreateRequest bookRequest : books) {
+        for (BookDTO bookRequest : books) {
             try {
                 bookService.createBook(bookRequest);
             } catch (BookAlreadyExistsException e) {

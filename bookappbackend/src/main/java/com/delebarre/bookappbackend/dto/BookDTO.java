@@ -1,18 +1,12 @@
-package com.delebarre.bookappbackend.model;
-
-import lombok.Data;
+package com.delebarre.bookappbackend.dto;
 
 import java.util.List;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @Data
-@Document(collection = "books")
-public class Book {
-    @MongoId
-    private String id;
+@AllArgsConstructor
+public class BookDTO {    
     private String title;
     private String author;
     private byte[] coverImage;
@@ -27,5 +21,11 @@ public class Book {
     private List<String> subjects; // List of genres or categories
     private String openLibraryId; // Identifier from Open Library
     private String goodreadsId; // Identifier from Goodreads if available
-    private List<String> contributors; // Other contributors like editors or illustrators
+    private List<String> contributors;
+
+    public BookDTO(String title, String author, String ISBN) {
+        this.title = title;
+        this.author = author;
+        this.ISBN = ISBN;
+    }
 }

@@ -1,6 +1,6 @@
 package com.delebarre.bookappbackend.service;
 
-import com.delebarre.bookappbackend.dto.BookCreateRequest;
+import com.delebarre.bookappbackend.dto.BookDTO;
 import com.delebarre.bookappbackend.exception.BookAlreadyExistsException;
 import com.delebarre.bookappbackend.exception.BookNotFoundException;
 import com.delebarre.bookappbackend.model.Book;
@@ -16,6 +16,8 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -41,21 +43,21 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Book createBook(BookCreateRequest bookCreateRequest) {
+    public Book createBook(BookDTO bookDTO) {
         // Check if a book with the same title and author already exists
-        if (bookRepository.existsByTitleAndAuthor(bookCreateRequest.getTitle(), bookCreateRequest.getAuthor())) {
+        if (bookRepository.existsByTitleAndAuthor(bookDTO.getTitle(), bookDTO.getAuthor())) {
             throw new BookAlreadyExistsException("A book with the same title and author already exists");
         }
 
         Book book = new Book();
-        book.setTitle(bookCreateRequest.getTitle());
-        book.setAuthor(bookCreateRequest.getAuthor());
+        book.setTitle(bookDTO.getTitle());
+        book.setAuthor(bookDTO.getAuthor());
 
         // Fetch additional metadata from Open Library API
-        String encodedTitle = URLEncoder.encode(bookCreateRequest.getTitle(), StandardCharsets.UTF_8);
-        String encodedAuthor = URLEncoder.encode(bookCreateRequest.getAuthor(), StandardCharsets.UTF_8);
-        String searchUrl = String.format("https://openlibrary.org/search.json?title=%s&author=%s", encodedTitle,
-                encodedAuthor);
+        String encodedTitle = URLEncoder.encode(bookDTO.getTitle(), StandardCharsets.UTF_8);
+        String encodedAuthor = URLEncoder.encode(bookDTO.getAuthor(), StandardCharsets.UTF_8);
+        String searchUrl = String.format("https://openlibrary.org/works/%s.json",
+         encodedAuthor);
 
         ResponseEntity<String> response = restTemplate.getForEntity(searchUrl, String.class);
         String responseBody = response.getBody();
@@ -99,35 +101,104 @@ public class BookServiceImpl implements BookService {
         return bookRepository.save(book);
     }
 
-    @Override
-    public Book updateBook(String id, Book book) {
-        Book existingBook = getBookById(id);
-        existingBook.setTitle(book.getTitle());
-        existingBook.setAuthor(book.getAuthor());
-        existingBook.setCoverImage(book.getCoverImage());
-        existingBook.setGenre(book.getGenre());
-        existingBook.setISBN(book.getISBN());
-        existingBook.setPublicationDate(book.getPublicationDate());
-        existingBook.setDescription(book.getDescription());
-        existingBook.setPublisher(book.getPublisher());
-        existingBook.setLanguage(book.getLanguage());
-        existingBook.setPageCount(book.getPageCount());
-        existingBook.setFormat(book.getFormat());
-        existingBook.setSubjects(book.getSubjects());
-        existingBook.setOpenLibraryId(book.getOpenLibraryId());
-        existingBook.setContributors(book.getContributors());
 
-        return bookRepository.save(existingBook);
+    @Override
+    public Book createBook(String openLibraryId) {
+        String encodedOpenLibraryId = URLEncoder.encode(openLibraryId, StandardCharsets.UTF_8);
+        String searchUrl = String.format("https://openlibrary.org/api/books?bibkeys=OLID:%s&format=json&jscmd=data",
+                openLibraryId);
+
+        ResponseEntity<String> response = restTemplate.getForEntity(searchUrl, String.class);
+        String responseBody = response.getBody();
+
+        if (responseBody == null || responseBody.isEmpty()) {
+            throw new BookNotFoundException("No book found with OpenLibrary ID: " + openLibraryId);
+        }
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+            JsonNode bookNode = rootNode.path("OLID:" + openLibraryId);
+
+            if (bookNode.isMissingNode()) {
+                throw new BookNotFoundException("No book found with OpenLibrary ID: " + openLibraryId);
+            }
+
+            Book book = new Book();
+            book.setTitle(bookNode.path("title").asText());
+            book.setAuthor(bookNode.path("authors").get(0).path("name").asText());
+
+            if (bookRepository.existsByTitleAndAuthor(book.getTitle(), book.getAuthor())) {
+                throw new BookAlreadyExistsException("A book with the same title and author already exists");
+            }
+
+            // Set cover image
+            String coverId = bookNode.path("cover").path("id").asText();
+            if (!coverId.isEmpty()) {
+                String coverUrl = String.format("https://covers.openlibrary.org/b/id/%s-L.jpg", coverId);
+                byte[] coverImage = restTemplate.getForObject(coverUrl, byte[].class);
+                book.setCoverImage(coverImage);
+            }
+
+            // Set other metadata fields
+            book.setGenre(bookNode.path("subjects").asText());
+            book.setISBN(bookNode.path("identifiers").path("isbn_13").get(0).asText());
+            book.setPublicationDate(bookNode.path("publish_date").asText());
+            book.setDescription(bookNode.path("subtitle").asText());
+            book.setPublisher(bookNode.path("publishers").get(0).asText());
+            book.setLanguage(bookNode.path("languages").get(0).path("key").asText().replace("/languages/", ""));
+            book.setPageCount(bookNode.path("number_of_pages").asInt());
+            book.setFormat(bookNode.path("physical_format").asText());
+            book.setSubjects(objectMapper.convertValue(bookNode.path("subjects"), List.class));
+            book.setOpenLibraryId(bookNode.path("key").asText());
+            book.setContributors(objectMapper.convertValue(bookNode.path("authors"), List.class));
+            return bookRepository.save(book);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error processing JSON response", e);
+        }
     }
 
     @Override
-    public void deleteBook(String id) {
-        bookRepository.deleteById(id);
+    public Book updateBook(String id, Book book) {
+        try {
+            Book existingBook = getBookById(id);
+            existingBook.setTitle(book.getTitle());
+            existingBook.setAuthor(book.getAuthor());
+            existingBook.setCoverImage(book.getCoverImage());
+            existingBook.setGenre(book.getGenre());
+            existingBook.setISBN(book.getISBN());
+            existingBook.setPublicationDate(book.getPublicationDate());
+            existingBook.setDescription(book.getDescription());
+            existingBook.setPublisher(book.getPublisher());
+            existingBook.setLanguage(book.getLanguage());
+            existingBook.setPageCount(book.getPageCount());
+            existingBook.setFormat(book.getFormat());
+            existingBook.setSubjects(book.getSubjects());
+            existingBook.setOpenLibraryId(book.getOpenLibraryId());
+            existingBook.setContributors(book.getContributors());
+
+            return bookRepository.save(existingBook);
+        } catch (BookNotFoundException e) {
+            throw new BookNotFoundException("Book not found with id: " + id);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating book", e);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> deleteBook(String id) {
+        Book book = bookRepository.findById(id).orElse(null);
+        if (book != null) {
+            bookRepository.deleteById(id);
+            return ResponseEntity.ok(book);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found with id: " + id);
+        }
     }
 
     @Override
     public List<Book> searchBooks(String title, String author) {
-
         String searchUrl = OPEN_LIBRARY_API + "?title=" + title + "&author=" + author;
         ResponseEntity<String> response = restTemplate.getForEntity(searchUrl, String.class);
         String responseBody = response.getBody();
@@ -140,61 +211,7 @@ public class BookServiceImpl implements BookService {
                 JsonNode docs = rootNode.path("docs");
 
                 for (JsonNode doc : docs) {
-                    Book book = new Book();
-
-                    if (doc.has("title")) {
-                        book.setTitle(doc.path("title").asText());
-                    }
-                    if (doc.has("author_name") && doc.path("author_name").isArray()
-                            && !doc.path("author_name").isEmpty()) {
-                        book.setAuthor(doc.path("author_name").get(0).asText());
-                    }
-                    if (doc.has("subject")) {
-                        book.setGenre(doc.path("subject").asText());
-                    }
-                    if (doc.has("isbn") && doc.path("isbn").isArray() && !doc.path("isbn").isEmpty()) {
-                        book.setISBN(doc.path("isbn").get(0).asText());
-                    }
-                    if (doc.has("first_publish_year")) {
-                        book.setPublicationDate(doc.path("first_publish_year").asText());
-                    }
-                    if (doc.has("subtitle")) {
-                        book.setDescription(doc.path("subtitle").asText());
-                    }
-                    if (doc.has("publisher") && doc.path("publisher").isArray() && !doc.path("publisher").isEmpty()) {
-                        book.setPublisher(doc.path("publisher").get(0).asText());
-                    }
-                    if (doc.has("language") && doc.path("language").isArray() && !doc.path("language").isEmpty()) {
-                        book.setLanguage(doc.path("language").get(0).asText());
-                    }
-                    if (doc.has("number_of_pages_median")) {
-                        book.setPageCount(doc.path("number_of_pages_median").asInt());
-                    }
-                    if (doc.has("format")) {
-                        book.setFormat(doc.path("format").asText());
-                    }
-                    if (doc.has("subject")) {
-                        book.setSubjects(objectMapper.convertValue(doc.path("subject"), List.class));
-                    }
-                    if (doc.has("key")) {
-                        book.setOpenLibraryId(doc.path("key").asText());
-                    }
-                    if (doc.has("author_name") && doc.path("author_name").isArray()) {
-                        book.setContributors(objectMapper.convertValue(doc.path("author_name"), List.class));
-                    }
-
-                    // Set cover image
-                    // TODO seach cover for 1 book only as this one too slow. Or lazy load...
-                    // if (doc.has("cover_i")) {
-                    // String coverId = doc.path("cover_i").asText();
-                    // if (!coverId.isEmpty()) {
-                    // String coverUrl =
-                    // String.format("https://covers.openlibrary.org/b/id/%s-L.jpg", coverId);
-                    // byte[] coverImage = restTemplate.getForObject(coverUrl, byte[].class);
-                    // book.setCoverImage(coverImage);
-                    // }
-                    // }
-                    books.add(book);
+                    books.add(mapJsonToBook(doc, objectMapper));
                 }
             } catch (JsonProcessingException e) {
                 // Handle JSON parsing exception
@@ -204,8 +221,42 @@ public class BookServiceImpl implements BookService {
         return books;
     }
 
+    private Book mapJsonToBook(JsonNode doc, ObjectMapper objectMapper) {
+        Book book = new Book();
+
+        book.setTitle(getJsonNodeText(doc, "title"));
+        book.setAuthor(getJsonNodeArrayText(doc, "author_name"));
+        book.setGenre(getJsonNodeText(doc, "subject"));
+        book.setISBN(getJsonNodeArrayText(doc, "isbn"));
+        book.setPublicationDate(getJsonNodeText(doc, "first_publish_year"));
+        book.setDescription(getJsonNodeText(doc, "subtitle"));
+        book.setPublisher(getJsonNodeArrayText(doc, "publisher"));
+        book.setLanguage(getJsonNodeArrayText(doc, "language"));
+        book.setPageCount(getJsonNodeInt(doc, "number_of_pages_median"));
+        book.setFormat(getJsonNodeText(doc, "format"));
+        book.setSubjects(objectMapper.convertValue(doc.path("subject"), List.class));
+        book.setOpenLibraryId(getJsonNodeText(doc, "key"));
+        book.setContributors(objectMapper.convertValue(doc.path("author_name"), List.class));
+
+        return book;
+    }
+
+    private String getJsonNodeText(JsonNode node, String fieldName) {
+        return node.has(fieldName) ? node.path(fieldName).asText() : null;
+    }
+
+    private String getJsonNodeArrayText(JsonNode node, String fieldName) {
+        return node.has(fieldName) && node.path(fieldName).isArray() && node.path(fieldName).size() > 0
+                ? node.path(fieldName).get(0).asText()
+                : null;
+    }
+
+    private int getJsonNodeInt(JsonNode node, String fieldName) {
+        return node.has(fieldName) ? node.path(fieldName).asInt() : 0;
+    }
+
     @Override
-    public Optional<byte[]> searchCover(Long openLibraryId) {
+    public Optional<byte[]> searchCover(String openLibraryId) {
         String coverUrl = String.format("https://covers.openlibrary.org/b/id/%s-L.jpg", openLibraryId);
         try {
             byte[] coverImage = restTemplate.getForObject(coverUrl, byte[].class);
