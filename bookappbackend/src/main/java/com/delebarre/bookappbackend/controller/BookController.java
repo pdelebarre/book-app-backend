@@ -33,21 +33,39 @@ public class BookController {
         return ResponseEntity.ok(book);
     }
 
+    // @CrossOrigin(origins = "*")
+    // @PostMapping
+    // @ResponseStatus(HttpStatus.CREATED)
+    // public ResponseEntity<?> createBook(
+    // @RequestBody(required = false) BookDTO bookDTO,
+    // @RequestParam(required = false) String openLibraryId) {
+    // try {
+    // Book book;
+    // if (bookDTO != null) {
+    // book = bookService.createBook(bookDTO);
+    // } else if (openLibraryId != null) {
+    // book = bookService.createBook(openLibraryId);
+    // } else {
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request
+    // data");
+    // }
+    // return ResponseEntity.status(HttpStatus.CREATED).body(book);
+    // } catch (BookAlreadyExistsException e) {
+    // return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    // } catch (Exception e) {
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating
+    // book");
+    // }
+    // }
     @CrossOrigin(origins = "*")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> createBook(
-            @RequestBody(required = false) BookDTO bookDTO,
-            @RequestParam(required = false) String openLibraryId) {
+            @RequestParam(required = false) String olid) {
         try {
             Book book;
-            if (bookDTO != null) {
-                book = bookService.createBook(bookDTO);
-            } else if (openLibraryId != null) {
-                book = bookService.createBook(openLibraryId);
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request data");
-            }
+            book = bookService.createBook(olid);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(book);
         } catch (BookAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
@@ -67,6 +85,12 @@ public class BookController {
     @DeleteMapping
     public ResponseEntity<?> deleteBook(@RequestParam String id) {
         return bookService.deleteBook(id);
+    }
+
+    @CrossOrigin(origins = "*")
+    @DeleteMapping("/all")
+    public void deleteBook() {
+        bookService.deleteAll();
     }
 
     @CrossOrigin(origins = "*")

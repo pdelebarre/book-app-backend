@@ -1,6 +1,5 @@
 package com.delebarre.bookappbackend.service;
 
-import com.delebarre.bookappbackend.dto.BookDTO;
 import com.delebarre.bookappbackend.model.Book;
 
 import java.util.List;
@@ -13,9 +12,11 @@ public interface BookService {
 
     Book getBookById(String id);
 
-    Book createBook(BookDTO bookCreateRequest);
-    
-    public Book createBook(String openLibraryId);
+    public List<Book> getBooksBySubjectName(String subjectName);
+
+    public List<Book> getBooksByContributorName(String contributorName);
+
+    public Book createBook(String olid);
 
     Book updateBook(String id, Book book);
 
@@ -23,6 +24,8 @@ public interface BookService {
 
     List<Book> searchBooks(String title, String author);
 
-    public Optional<byte[]> searchCover(String openLibraryId);
+    public Optional<byte[]> searchCover(String olid);
+
+    void deleteAll();
 
 }
