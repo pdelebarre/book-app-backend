@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class BookDTO {
+public class BookSearchDTO {
     private String title;
     private String author;
     private byte[] coverImage;
@@ -27,7 +27,7 @@ public class BookDTO {
     private String goodreadsId; // Identifier from Goodreads if available
     private List<Contributor> contributors;
 
-    public BookDTO(String title, String author, String ISBN) {
+    public BookSearchDTO(String title, String author, String ISBN) {
         this.title = title;
         this.author = author;
         this.ISBN = ISBN;

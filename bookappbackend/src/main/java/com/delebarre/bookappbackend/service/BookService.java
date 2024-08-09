@@ -22,7 +22,7 @@ public interface BookService {
 
     ResponseEntity<?> deleteBook(String id);
 
-    List<Book> searchBooks(String title, String author);
+    List<Book> searchBooks(String title, String author, String isbn);
 
     public Optional<byte[]> searchCover(String olid);
 

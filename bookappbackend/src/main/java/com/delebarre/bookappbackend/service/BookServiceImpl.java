@@ -11,7 +11,9 @@ import com.delebarre.bookappbackend.repository.SubjectRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -278,10 +280,25 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> searchBooks(String title, String author) {
-        String searchUrl = OPEN_LIBRARY_API + "?title=" + title + "&author=" + author;
-        ResponseEntity<String> response = restTemplate.getForEntity(searchUrl, String.class);
-        String responseBody = response.getBody();
+    public List<Book> searchBooks(String title, String author, String isbn) {
+
+        if (!StringUtils.hasText(title) && !StringUtils.hasText(author) && !StringUtils.hasText(isbn)) {
+            throw new IllegalArgumentException("At least one search parameter must be provided");
+        }
+        
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(OPEN_LIBRARY_API);
+
+        if (StringUtils.hasText(title)) {
+            uriBuilder.queryParam("title", title);
+        }
+        if (StringUtils.hasText(author)) {
+            uriBuilder.queryParam("author", author);
+        }
+        if (StringUtils.hasText(isbn)) {
+            uriBuilder.queryParam("isbn", isbn);
+        }
+
+        String responseBody = restTemplate.getForObject(uriBuilder.toUriString(), String.class);
 
         List<Book> books = new ArrayList<>();
         if (responseBody != null) {
@@ -300,6 +317,8 @@ public class BookServiceImpl implements BookService {
         }
         return books;
     }
+
+
 
     private Book mapJsonToBook(JsonNode doc, ObjectMapper objectMapper) {
         Book book = new Book();

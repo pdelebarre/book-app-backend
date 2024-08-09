@@ -1,6 +1,6 @@
 package com.delebarre.bookappbackend.controller;
 
-import com.delebarre.bookappbackend.dto.BookDTO;
+import com.delebarre.bookappbackend.dto.BookSearchDTO;
 import com.delebarre.bookappbackend.exception.BookAlreadyExistsException;
 import com.delebarre.bookappbackend.model.Book;
 import com.delebarre.bookappbackend.service.BookService;
@@ -95,11 +95,10 @@ public class BookController {
 
     @CrossOrigin(origins = "*")
     @GetMapping("/search")
-    public ResponseEntity<List<Book>> searchBooks(
-            @RequestParam String title,
-            @RequestParam String author) {
-        List<Book> books = bookService.searchBooks(title, author);
-        return ResponseEntity.ok(books);
+    public List<Book> searchBooks(@RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String isbn) {
+        return bookService.searchBooks(title, author, isbn);
     }
 
     @CrossOrigin(origins = "*")
