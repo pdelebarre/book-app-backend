@@ -16,7 +16,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // List of books to add
         String[] olids = {
-                "OL51017267M", "OL33899062M", "OL24981637M"            
+                "OL51017267M", "OL33899062M", "OL24981637M", "OL7826547M"
         };
 
         for (String olid : olids) { // for (BookDTO bookRequest : books) {
