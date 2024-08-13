@@ -1,0 +1,1 @@
+docker run -e MONGO_URI=mongodb://host.docker.internal:27017/test -p 8080:8080 bookappbackend
