@@ -61,7 +61,7 @@ public class BookController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> createBook(
-            @RequestParam(required = false) String olid) {
+            @RequestParam(required = true) String olid) {
         try {
             Book book;
             book = bookService.createBook(olid);

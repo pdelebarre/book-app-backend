@@ -1,6 +1,6 @@
 services:
   mongo_db:
-    image: mongo:3.6
+    image: mongo:latest
     restart: unless-stopped
     env_file: ./.env
     environment:
