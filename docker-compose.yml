@@ -13,8 +13,8 @@ services:
   bookappbackend:
     depends_on:
       - mongo_db
-    build: ./bookappbackend
-    image: bookappbackend
+    # build: ./bookappbackend
+    image: pdelebarre/bookappbackend:latest
 
     restart: on-failure
     env_file: ./.env
