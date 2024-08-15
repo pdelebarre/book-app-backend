@@ -63,76 +63,9 @@ public class BookServiceImpl implements BookService {
                 .orElse(Collections.emptyList());
     }
 
-    // @Override
-    // public Book createBook(BookDTO bookDTO) {
-    // // Check if a book with the same title and author already exists
-    // if (bookRepository.existsByTitleAndAuthor(bookDTO.getTitle(),
-    // bookDTO.getAuthor())) {
-    // throw new BookAlreadyExistsException("A book with the same title and author
-    // already exists");
-    // }
-
-    // Book book = new Book();
-    // book.setTitle(bookDTO.getTitle());
-    // book.setAuthor(bookDTO.getAuthor());
-
-    // // Fetch additional metadata from Open Library API
-    // String encodedTitle = URLEncoder.encode(bookDTO.getTitle(),
-    // StandardCharsets.UTF_8);
-    // String encodedAuthor = URLEncoder.encode(bookDTO.getAuthor(),
-    // StandardCharsets.UTF_8);
-    // String searchUrl = String.format("https://openlibrary.org/works/%s.json",
-    // encodedAuthor);
-
-    // ResponseEntity<String> response = restTemplate.getForEntity(searchUrl,
-    // String.class);
-    // String responseBody = response.getBody();
-
-    // if (responseBody != null) {
-    // try {
-    // ObjectMapper objectMapper = new ObjectMapper();
-    // JsonNode rootNode = objectMapper.readTree(responseBody);
-    // JsonNode docs = rootNode.path("docs");
-
-    // if (docs.isArray() && docs.size() > 0) {
-    // JsonNode firstBook = docs.get(0);
-
-    // // Set cover image
-    // String coverId = firstBook.path("cover_i").asText();
-    // if (!coverId.isEmpty()) {
-    // String coverUrl =
-    // String.format("https://covers.openlibrary.org/b/id/%s-L.jpg", coverId);
-    // byte[] coverImage = restTemplate.getForObject(coverUrl, byte[].class);
-    // book.setCoverImage(coverImage);
-    // }
-
-    // // Set other metadata fields
-    // book.setGenre(firstBook.path("subject").asText());
-    // book.setISBN(firstBook.path("isbn").get(0).asText());
-    // book.setPublicationDate(firstBook.path("first_publish_year").asText());
-    // book.setDescription(firstBook.path("subtitle").asText());
-    // book.setPublisher(firstBook.path("publisher").get(0).asText());
-    // book.setLanguage(firstBook.path("language").get(0).asText());
-    // book.setPageCount(firstBook.path("number_of_pages_median").asInt());
-    // book.setFormat(firstBook.path("format").asText());
-    // book.setSubjects(objectMapper.convertValue(firstBook.path("subject"),
-    // List.class));
-    // book.setOpenLibraryId(firstBook.path("key").asText());
-    // book.setContributors(objectMapper.convertValue(firstBook.path("author_name"),
-    // List.class));
-    // }
-    // } catch (JsonProcessingException e) {
-    // // Handle JSON parsing exception
-    // throw new BookNotFoundException("Book not found in OpenLibrary " +
-    // bookDTO.getTitle());
-    // }
-    // }
-
-    // return bookRepository.save(book);
-    // }
-
     @Override
     public Book createBook(String olid) {
+        olid = olid.substring(olid.lastIndexOf('/') + 1);
         if (bookRepository.existsByOpenLibraryId(olid)) {
             throw new BookAlreadyExistsException("A book with the same title and author already exists");
         }
@@ -285,7 +218,7 @@ public class BookServiceImpl implements BookService {
         if (!StringUtils.hasText(title) && !StringUtils.hasText(author) && !StringUtils.hasText(isbn)) {
             throw new IllegalArgumentException("At least one search parameter must be provided");
         }
-        
+
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(OPEN_LIBRARY_API);
 
         if (StringUtils.hasText(title)) {
@@ -317,8 +250,6 @@ public class BookServiceImpl implements BookService {
         }
         return books;
     }
-
-
 
     private Book mapJsonToBook(JsonNode doc, ObjectMapper objectMapper) {
         Book book = new Book();

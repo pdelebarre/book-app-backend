@@ -1,6 +1,5 @@
 package com.delebarre.bookappbackend.controller;
 
-import com.delebarre.bookappbackend.dto.BookSearchDTO;
 import com.delebarre.bookappbackend.exception.BookAlreadyExistsException;
 import com.delebarre.bookappbackend.model.Book;
 import com.delebarre.bookappbackend.service.BookService;
@@ -33,30 +32,6 @@ public class BookController {
         return ResponseEntity.ok(book);
     }
 
-    // @CrossOrigin(origins = "*")
-    // @PostMapping
-    // @ResponseStatus(HttpStatus.CREATED)
-    // public ResponseEntity<?> createBook(
-    // @RequestBody(required = false) BookDTO bookDTO,
-    // @RequestParam(required = false) String openLibraryId) {
-    // try {
-    // Book book;
-    // if (bookDTO != null) {
-    // book = bookService.createBook(bookDTO);
-    // } else if (openLibraryId != null) {
-    // book = bookService.createBook(openLibraryId);
-    // } else {
-    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request
-    // data");
-    // }
-    // return ResponseEntity.status(HttpStatus.CREATED).body(book);
-    // } catch (BookAlreadyExistsException e) {
-    // return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    // } catch (Exception e) {
-    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating
-    // book");
-    // }
-    // }
     @CrossOrigin(origins = "*")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -104,8 +79,8 @@ public class BookController {
     @CrossOrigin(origins = "*")
     @GetMapping("/searchCover")
     public ResponseEntity<Optional<byte[]>> searchBooks(
-            @RequestParam String openLibraryId) {
-        Optional<byte[]> cover = bookService.searchCover(openLibraryId);
+            @RequestParam(required = true) String olid) {
+        Optional<byte[]> cover = bookService.searchCover(olid);
         return ResponseEntity.ok(cover);
     }
 
