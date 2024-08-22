@@ -18,8 +18,9 @@ public class BookappbackendApplication {
 	@Bean
 	public RestTemplate restTemplate(RestTemplateBuilder builder) {
 		return builder
-			.setConnectTimeout(Duration.ofSeconds(10))
-			.setReadTimeout(Duration.ofSeconds(10))
-			.build();
+				.setConnectTimeout(Duration.ofSeconds(10))
+				.setReadTimeout(Duration.ofSeconds(10))
+				.build();
 	}
+	
 }

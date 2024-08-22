@@ -1,5 +1,6 @@
 package com.delebarre.bookappbackend.service;
 
+import com.delebarre.bookappbackend.config.BookWebSocketHandler;
 import com.delebarre.bookappbackend.exception.BookAlreadyExistsException;
 import com.delebarre.bookappbackend.exception.BookNotFoundException;
 import com.delebarre.bookappbackend.model.Book;
@@ -32,6 +33,8 @@ import org.springframework.http.ResponseEntity;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final BookWebSocketHandler webSocketHandler;
+
     private final SubjectRepository subjectRepository;
     private final ContributorRepository contributorRepository;
     private final RestTemplate restTemplate;
@@ -108,7 +111,12 @@ public class BookServiceImpl implements BookService {
             // Set ISBN from the identifiers node
             String isbn = getArrayNodeFirstValue(bookNode.path("identifiers"), "isbn_13");
             book.setIsbn(isbn);
-            return bookRepository.save(book);
+
+            Book savedBook = bookRepository.save(book);
+
+            webSocketHandler.broadcastUpdate("Book added: " + savedBook.getId());
+
+            return savedBook;
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error processing JSON response", e);
@@ -193,7 +201,9 @@ public class BookServiceImpl implements BookService {
             existingBook.setOpenLibraryId(book.getOpenLibraryId());
             existingBook.setContributors(book.getContributors());
 
-            return bookRepository.save(existingBook);
+            Book updatedBook = bookRepository.save(existingBook);
+            webSocketHandler.broadcastUpdate("Book updated: " + updatedBook.getId());
+            return updatedBook;
         } catch (BookNotFoundException e) {
             throw new BookNotFoundException("Book not found with id: " + id);
         } catch (Exception e) {
@@ -206,6 +216,8 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(id).orElse(null);
         if (book != null) {
             bookRepository.deleteById(id);
+            webSocketHandler.broadcastUpdate("Book deleted: " + id);
+
             return ResponseEntity.ok(book);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found with id: " + id);

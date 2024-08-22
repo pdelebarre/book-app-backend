@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +20,6 @@ public class BookController {
 
     private final BookService bookService;
 
-    private final SimpMessagingTemplate messagingTemplate;
 
     @CrossOrigin(origins = "*")
     @GetMapping("/all")
@@ -44,7 +42,6 @@ public class BookController {
         try {
             Book book;
             book = bookService.createBook(olid);
-            messagingTemplate.convertAndSend("/topic/books", "update");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(book);
         } catch (BookAlreadyExistsException e) {
@@ -58,7 +55,6 @@ public class BookController {
     @PutMapping
     public ResponseEntity<Book> updateBook(@RequestParam String id, @RequestBody Book book) {
         Book updatedBook = bookService.updateBook(id, book);
-        messagingTemplate.convertAndSend("/topic/books", "update");
         return ResponseEntity.ok(updatedBook);
     }
 
@@ -66,7 +62,6 @@ public class BookController {
     @DeleteMapping
     public ResponseEntity<?> deleteBook(@RequestParam String id) {
         bookService.deleteBook(id);
-        messagingTemplate.convertAndSend("/topic/books", "update");
         return ResponseEntity.ok().build();
     }
 
