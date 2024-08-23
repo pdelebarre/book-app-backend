@@ -1,8 +1,25 @@
-FROM maven:3.8.5-openjdk-17
-# FROM maven:3.8.2-jdk-8 # for Java 8
+# Stage 1: Build the application
+FROM maven:3.8.5-openjdk-17 AS build
 
 WORKDIR /app
-COPY . .
-RUN mvn clean install
 
-CMD mvn spring-boot:run
+# Copy pom.xml and download dependencies only
+COPY pom.xml ./
+COPY src ./src
+
+# Download dependencies and build the application
+RUN mvn clean package -DskipTests
+
+# Stage 2: Create a minimal runtime image
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Copy only the built jar from the build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose the port your Spring Boot app runs on
+EXPOSE 8080
+
+# Run the Spring Boot application
+CMD ["java", "-jar", "app.jar"]
