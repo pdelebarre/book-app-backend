@@ -81,7 +81,7 @@ public class BookController {
 
     @CrossOrigin(origins = "*")
     @GetMapping("/searchCover")
-    public ResponseEntity<Optional<byte[]>> searchBooks(
+    public ResponseEntity<Optional<byte[]>> searchCover(
             @RequestParam(required = true) String olid) {
         Optional<byte[]> cover = bookService.searchCover(olid);
         return ResponseEntity.ok(cover);
