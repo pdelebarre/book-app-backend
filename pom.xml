@@ -140,7 +140,7 @@
 				<artifactId>sonar-maven-plugin</artifactId>
 				<version>4.0.0.4121</version>				<!-- Check for the latest version -->
 			</plugin>
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
@@ -182,12 +182,12 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 
 		</plugins>
 	</build>
 
-	<!-- <profiles>
+	<profiles>
 		<profile>
 			<id>coverage</id>
 			<activation>
@@ -216,5 +216,5 @@
 				</plugins>
 			</build>
 		</profile>
-	</profiles> -->
+	</profiles>
 </project>
