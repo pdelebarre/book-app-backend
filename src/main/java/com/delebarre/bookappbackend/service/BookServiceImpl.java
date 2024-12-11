@@ -234,13 +234,13 @@ public class BookServiceImpl implements BookService {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(OPEN_LIBRARY_API);
 
         if (StringUtils.hasText(title)) {
-            uriBuilder.queryParam("title", title);
+            uriBuilder.queryParam("title", sanitizeInput(title));
         }
         if (StringUtils.hasText(author)) {
-            uriBuilder.queryParam("author", author);
+            uriBuilder.queryParam("author", sanitizeInput(author));
         }
         if (StringUtils.hasText(isbn)) {
-            uriBuilder.queryParam("isbn", isbn);
+            uriBuilder.queryParam("isbn", sanitizeInput(isbn));
         }
 
         String responseBody = restTemplate.getForObject(uriBuilder.toUriString(), String.class);
@@ -314,4 +314,8 @@ public class BookServiceImpl implements BookService {
         bookRepository.deleteAll();
     }
 
+    private String sanitizeInput(String input) {
+        // Add input sanitization logic here
+        return input.replaceAll("[^a-zA-Z0-9\\s]", "");
+    }
 }
